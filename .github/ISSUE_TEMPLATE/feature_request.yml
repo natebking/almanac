@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an improvement to Almanac
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Almanac is a Google-native property operations **front end**, not a
+        full property management system. Requests for accounting, rent
+        collection, payments, or resident portals are intentionally out of scope.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the operator or developer pain, not just the feature.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This keeps Google Drive/Sheets as the source of truth.
+          required: true
+        - label: This does not turn Almanac into a full PM/accounting system.
+          required: true

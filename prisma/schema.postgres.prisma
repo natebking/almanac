@@ -1,0 +1,276 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String              @id @default(cuid())
+  clerkUserId      String?             @unique
+  email            String?             @unique
+  name             String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  googleAccounts   GoogleAccount[]
+  properties       Property[]
+  vendors          Vendor[]
+  templates        DocumentTemplate[]
+  generatedDocs    GeneratedDocument[]
+  tasks            Task[]
+  sources          SourceConnection[]
+  propertyIndex    PropertyIndex[]
+  driveFileIndex   DriveFileIndex[]
+  aiConversations  AiConversation[]
+  propertyVisits   PropertyVisit[]
+  propertyProfiles PropertyProfile[]
+}
+
+model GoogleAccount {
+  id                    String    @id @default(cuid())
+  userId                String
+  googleEmail           String?
+  encryptedAccessToken  String?
+  encryptedRefreshToken String?
+  tokenExpiry           DateTime?
+  scopes                String
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Property {
+  id             String               @id @default(cuid())
+  userId         String
+  address        String
+  ownerName      String
+  tenantName     String
+  notes          String
+  driveFolderId  String?
+  driveFolderUrl String?
+  utilityNotes   String
+  accessCodes    String
+  applianceNotes String
+  filterSize     String
+  warrantyNotes  String
+  hoaNotes       String
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendorLinks    VendorPropertyLink[]
+  generatedDocs  GeneratedDocument[]
+  tasks          Task[]
+}
+
+model SourceConnection {
+  id            String           @id @default(cuid())
+  userId        String
+  kind          String
+  name          String
+  googleFileId  String?
+  googleFileUrl String?
+  status        String
+  lastSyncedAt  DateTime?
+  metadataJson  String
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyRows  PropertyIndex[]
+  driveFiles    DriveFileIndex[]
+}
+
+model PropertyIndex {
+  id                  String               @id @default(cuid())
+  userId              String
+  sourceConnectionId  String?
+  sourceSpreadsheetId String
+  sourceSheetName     String
+  sourceRowNumber     Int
+  address             String
+  normalizedAddress   String
+  currentTenants      String
+  rentAmount          String
+  leaseStart          String
+  leaseEnd            String
+  tenantPhone         String
+  tenantEmail         String
+  tenantBirthdays     String
+  pets                String
+  owner               String
+  brokerSplit         String
+  tenantNotes         String
+  status              String
+  driveFolderId       String?
+  driveFolderUrl      String?
+  rawJson             String
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceConnection    SourceConnection?    @relation(fields: [sourceConnectionId], references: [id], onDelete: SetNull)
+  driveFiles          DriveFileIndex[]
+  generatedDocs       GeneratedDocument[]
+  vendorLinks         VendorPropertyLink[]
+  propertyVisits      PropertyVisit[]
+  profile             PropertyProfile?
+
+  @@unique([userId, sourceSpreadsheetId, sourceSheetName, sourceRowNumber])
+  @@index([userId, normalizedAddress])
+}
+
+model PropertyProfile {
+  id               String        @id @default(cuid())
+  userId           String
+  propertyIndexId  String        @unique
+  applianceInfo    String
+  filterSize       String
+  homeWarranty     String
+  hoaInfo          String
+  utilityProviders String
+  accessCodes      String
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyIndex    PropertyIndex @relation(fields: [propertyIndexId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyIndexId])
+  @@index([userId])
+}
+
+model PropertyVisit {
+  id              String        @id @default(cuid())
+  userId          String
+  propertyIndexId String
+  openedAt        DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyIndex   PropertyIndex @relation(fields: [propertyIndexId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyIndexId])
+  @@index([userId, openedAt])
+}
+
+model DriveFileIndex {
+  id                 String            @id @default(cuid())
+  userId             String
+  sourceConnectionId String?
+  propertyIndexId    String?
+  googleFileId       String
+  name               String
+  mimeType           String
+  category           String
+  webViewLink        String
+  modifiedTime       DateTime?
+  textExtract        String
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceConnection   SourceConnection? @relation(fields: [sourceConnectionId], references: [id], onDelete: SetNull)
+  propertyIndex      PropertyIndex?    @relation(fields: [propertyIndexId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, googleFileId])
+  @@index([userId, category])
+}
+
+model Vendor {
+  id              String               @id @default(cuid())
+  userId          String
+  name            String
+  trade           String
+  phone           String
+  email           String
+  notes           String
+  licenseStatus   String
+  insuranceStatus String
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyLinks   VendorPropertyLink[]
+}
+
+model VendorPropertyLink {
+  id              String         @id @default(cuid())
+  vendorId        String
+  propertyId      String?
+  propertyIndexId String?
+  createdAt       DateTime       @default(now())
+  vendor          Vendor         @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  property        Property?      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyIndex   PropertyIndex? @relation(fields: [propertyIndexId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, propertyId])
+  @@unique([vendorId, propertyIndexId])
+}
+
+model DocumentTemplate {
+  id            String              @id @default(cuid())
+  userId        String
+  name          String
+  description   String
+  googleDocId   String?
+  googleDocUrl  String?
+  localBody     String
+  placeholders  String
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generatedDocs GeneratedDocument[]
+}
+
+model GeneratedDocument {
+  id              String           @id @default(cuid())
+  userId          String
+  propertyId      String?
+  propertyIndexId String?
+  templateId      String
+  title           String
+  status          String
+  renderedBody    String
+  fieldValuesJson String
+  googleDocId     String?
+  googleDocUrl    String?
+  pdfUrl          String?
+  errorMessage    String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property        Property?        @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  propertyIndex   PropertyIndex?   @relation(fields: [propertyIndexId], references: [id], onDelete: SetNull)
+  template        DocumentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id         String    @id @default(cuid())
+  userId     String
+  propertyId String?
+  title      String
+  dueDate    DateTime?
+  status     String
+  kind       String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+}
+
+model AiConversation {
+  id        String      @id @default(cuid())
+  userId    String
+  title     String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  AiMessage[]
+}
+
+model AiMessage {
+  id             String         @id @default(cuid())
+  conversationId String
+  role           String
+  content        String
+  citationsJson  String
+  createdAt      DateTime       @default(now())
+  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}

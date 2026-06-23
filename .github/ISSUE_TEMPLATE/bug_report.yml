@@ -1,0 +1,50 @@
+name: Bug report
+description: Something is broken in Almanac
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. **Do not include real tenant, owner, financial,
+        or Google account data, secrets, or tokens.** For security issues, see
+        SECURITY.md instead of filing a public issue.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `npm run dev`
+        2. Go to ...
+        3. See error
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options:
+        - Local demo (AUTH_MODE=alpha, GOOGLE_MODE=local)
+        - Hosted (AUTH_MODE=clerk)
+        - Real Google connected (GOOGLE_MODE=real)
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Node version, OS, and the commit/branch you are on.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant terminal or browser-console output (scrub any secrets).
+      render: shell
