@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
-import { DEMO_USER_COOKIE } from "@/lib/demo-cookie";
+import { DEMO_USER_COOKIE, shouldMintDemoSandbox } from "@/lib/demo-cookie";
 import {
   hostedSetupIssue,
   shouldRedirectHostedPathToSignIn,
@@ -58,11 +58,24 @@ export default function proxy(req: NextRequest, event: NextFetchEvent) {
 }
 
 // In demo mode (AUTH_MODE !== "clerk") every visitor gets a private sandbox
-// keyed by a per-browser cookie. Mint it on first request, and forward it on
-// the request headers so the very first render already resolves to the new
-// sandbox instead of a throwaway shared user.
+// keyed by a per-browser cookie. Mint it on a browser's first page load, and
+// forward it on the request headers so the very first render already resolves
+// to the new sandbox. Crawlers and scripts never keep cookies, so minting for
+// them would create a full sample portfolio on every request; they get the
+// shared fallback user instead.
 function withDemoUserCookie(req: NextRequest) {
   if (req.cookies.get(DEMO_USER_COOKIE)?.value) {
+    return NextResponse.next();
+  }
+
+  if (
+    !shouldMintDemoSandbox({
+      host: req.headers.get("host"),
+      accept: req.headers.get("accept"),
+      secFetchMode: req.headers.get("sec-fetch-mode"),
+      userAgent: req.headers.get("user-agent"),
+    })
+  ) {
     return NextResponse.next();
   }
 

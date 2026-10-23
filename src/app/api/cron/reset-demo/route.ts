@@ -7,6 +7,8 @@ export const maxDuration = 60;
 // recycled after this many days so the demo database does not grow unbounded.
 // A returning visitor within the window keeps their sandbox.
 const SANDBOX_TTL_DAYS = 7;
+const GC_BATCH_SIZE = 100;
+const GC_TIME_BUDGET_MS = 40_000;
 
 // Daily garbage collection for the public sample demo (demo.almanac.homes). A
 // Vercel Cron (see vercel.json) hits this once a day to delete stale
@@ -30,12 +32,31 @@ export async function GET(request: Request) {
   }
 
   const cutoff = new Date(Date.now() - SANDBOX_TTL_DAYS * 24 * 60 * 60 * 1000);
+  const stale = { email: null, createdAt: { lt: cutoff } };
+  // Delete in batches and stop well before maxDuration: one unbounded delete
+  // with its cascades timed out on a large backlog and made no progress. Any
+  // remainder is picked up the next night.
+  const deadline = Date.now() + GC_TIME_BUDGET_MS;
   const prisma = await createSeedClient();
   try {
-    const { count } = await prisma.user.deleteMany({
-      where: { email: null, createdAt: { lt: cutoff } },
-    });
-    return Response.json({ ok: true, recycled: count });
+    let recycled = 0;
+    let remaining = true;
+    while (Date.now() < deadline) {
+      const batch = await prisma.user.findMany({
+        where: stale,
+        select: { id: true },
+        take: GC_BATCH_SIZE,
+      });
+      if (batch.length === 0) {
+        remaining = false;
+        break;
+      }
+      const { count } = await prisma.user.deleteMany({
+        where: { ...stale, id: { in: batch.map((user) => user.id) } },
+      });
+      recycled += count;
+    }
+    return Response.json({ ok: true, recycled, remaining });
   } catch (error) {
     console.error("Demo sandbox GC failed", error);
     return Response.json({ ok: false }, { status: 500 });
