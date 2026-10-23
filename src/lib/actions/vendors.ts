@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { PrismaClient } from "@/generated/prisma/client";
 import { getDb } from "@/lib/db";
 import { getAlphaUser } from "@/lib/session";
 import {
@@ -12,10 +13,33 @@ function text(formData: FormData, key: string): string {
   return String(formData.get(key) ?? "").trim();
 }
 
+// Server actions accept any posted property id, so links are limited to the
+// signed-in user's own properties. Otherwise a vendor could be linked to
+// another account's house and show its address.
+async function ownedPropertyIndexIds(
+  db: PrismaClient,
+  userId: string,
+  formData: FormData,
+): Promise<string[]> {
+  const requested = propertyIndexIdsFromFormData(formData);
+
+  if (requested.length === 0) {
+    return [];
+  }
+
+  const owned = await db.propertyIndex.findMany({
+    where: { userId, id: { in: requested } },
+    select: { id: true },
+  });
+  const ownedIds = new Set(owned.map((property) => property.id));
+
+  return requested.filter((id) => ownedIds.has(id));
+}
+
 export async function createVendor(formData: FormData) {
   const db = await getDb();
   const user = await getAlphaUser();
-  const propertyIndexIds = propertyIndexIdsFromFormData(formData);
+  const propertyIndexIds = await ownedPropertyIndexIds(db, user.id, formData);
 
   await db.vendor.create({
     data: {
@@ -41,7 +65,7 @@ export async function updateVendor(formData: FormData) {
   const db = await getDb();
   const user = await getAlphaUser();
   const id = text(formData, "id");
-  const propertyIndexIds = propertyIndexIdsFromFormData(formData);
+  const propertyIndexIds = await ownedPropertyIndexIds(db, user.id, formData);
 
   await db.$transaction(async (tx) => {
     await tx.vendor.update({
