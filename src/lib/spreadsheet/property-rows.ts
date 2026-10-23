@@ -1,3 +1,5 @@
+import { normalizeSpreadsheetDate } from "@/lib/spreadsheet/dates";
+
 export type MasterSpreadsheetRowsInput = {
   spreadsheetId: string;
   sheetName: string;
@@ -231,8 +233,8 @@ export function parseMasterSpreadsheetRows(
         normalizedAddress: normalizeSearchText(address),
         currentTenants: value("currentTenants"),
         rentAmount: value("rentAmount"),
-        leaseStart: value("leaseStart"),
-        leaseEnd: value("leaseEnd"),
+        leaseStart: normalizeSpreadsheetDate(value("leaseStart")),
+        leaseEnd: normalizeSpreadsheetDate(value("leaseEnd")),
         tenantPhone: value("tenantPhone"),
         tenantEmail: value("tenantEmail"),
         tenantBirthdays: value("tenantBirthdays"),

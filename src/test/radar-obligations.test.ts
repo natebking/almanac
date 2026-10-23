@@ -69,4 +69,24 @@ describe("buildRadarObligations", () => {
     });
     expect(result).toHaveLength(0);
   });
+
+  it("keeps a lapsed lease on an occupied property at the top as past due", () => {
+    const obligations = buildRadarObligations({
+      today,
+      properties: [
+        property({ id: "lapsed", leaseEnd: "2026-06-01" }),
+        property({ id: "soon", leaseEnd: "2026-06-17" }),
+        property({ id: "gone", status: "Vacant", leaseEnd: "2026-05-01" }),
+      ],
+    });
+
+    expect(obligations[0]).toMatchObject({
+      id: "lease-lapsed",
+      title: "lapsed Street lease ended",
+      urgency: "overdue",
+      daysUntil: -14,
+    });
+    expect(obligations[0].detail).toContain("14 days ago");
+    expect(obligations.map((item) => item.id)).not.toContain("lease-gone");
+  });
 });

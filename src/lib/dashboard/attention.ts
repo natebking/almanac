@@ -59,15 +59,39 @@ export function buildDashboardAttentionItems(input: {
   );
 }
 
+// A lease end date that passed on a property that is not marked vacant usually
+// means a renewal was never recorded or a holdover tenant. Flag it until the
+// sheet is updated, but stop after a year so ancient rows do not pile up.
+const LEASE_LAPSED_DAYS = 365;
+
 function leaseAttentionItems(
   properties: DashboardAttentionProperty[],
   today: Date,
 ): DashboardAttentionItem[] {
-  return properties.flatMap((property) => {
+  return properties.flatMap((property): DashboardAttentionItem[] => {
     const days = daysUntil(property.leaseEnd, today);
 
-    if (days < 0 || days > 90) {
+    if (days < -LEASE_LAPSED_DAYS || days > 90) {
       return [];
+    }
+
+    if (days < 0) {
+      if (property.status.toLowerCase().includes("vacant")) {
+        return [];
+      }
+
+      const ago = -days;
+      return [
+        {
+          id: `lease-${property.id}`,
+          title: `${property.address} lease ended`,
+          subtitle: `${property.leaseEnd} - ${ago} ${ago === 1 ? "day" : "days"} ago. Renew or update the sheet.`,
+          href: `/houses/${property.id}`,
+          label: "lease",
+          tone: "danger",
+          priority: 5,
+        },
+      ];
     }
 
     return [

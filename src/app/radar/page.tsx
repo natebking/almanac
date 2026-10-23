@@ -17,6 +17,7 @@ const urgencyMeta: Record<
   RadarUrgency,
   { tone: "warning" | "danger" | "info" | "neutral"; label: string }
 > = {
+  overdue: { tone: "danger", label: "Past due" },
   "this-week": { tone: "danger", label: "This week" },
   ongoing: { tone: "info", label: "Ongoing" },
   soon: { tone: "warning", label: "Soon" },
