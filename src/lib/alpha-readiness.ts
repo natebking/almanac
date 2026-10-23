@@ -101,11 +101,10 @@ export function assessAlphaReadiness({
     requiredCheck({
       id: "allowed-users",
       label: "Invite-only email allowlist",
-      pass: normalizedEmails(env.ALMANAC_ALLOWED_EMAILS).includes(
-        alphaTesterEmail,
-      ),
-      passDetail: `ALMANAC_ALLOWED_EMAILS includes ${alphaTesterEmail}.`,
-      missingDetail: `Set ALMANAC_ALLOWED_EMAILS to include ${alphaTesterEmail} before the alpha tester's hosted dummy-file test. Add operator only after that test passes.`,
+      pass: normalizedEmails(env.ALMANAC_ALLOWED_EMAILS).length > 0,
+      passDetail: "ALMANAC_ALLOWED_EMAILS lists at least one invited email.",
+      missingDetail:
+        "Set ALMANAC_ALLOWED_EMAILS to the comma-separated emails allowed to sign in.",
     }),
     requiredCheck({
       id: "google-mode",

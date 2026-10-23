@@ -9,7 +9,12 @@ export type RadarObligationKind =
   | "vacancy"
   | "birthday";
 
-export type RadarUrgency = "this-week" | "ongoing" | "soon" | "upcoming";
+export type RadarUrgency =
+  | "overdue"
+  | "this-week"
+  | "ongoing"
+  | "soon"
+  | "upcoming";
 
 export type RadarObligation = {
   id: string;
@@ -38,6 +43,9 @@ export type RadarProperty = {
 };
 
 const LEASE_HORIZON_DAYS = 90;
+// Lease end dates that already passed on an occupied property stay on the radar
+// as past due (a renewal was never recorded, or the tenant is holding over).
+const LEASE_LAPSED_DAYS = 365;
 const MOVE_IN_HORIZON_DAYS = 30;
 const BIRTHDAY_HORIZON_DAYS = 31;
 
@@ -79,7 +87,11 @@ function leaseExpiryObligation(
 ): RadarObligation[] {
   const days = daysUntilDate(property.leaseEnd, today);
 
-  if (days === null || days < 0 || days > LEASE_HORIZON_DAYS) {
+  if (days === null || days < -LEASE_LAPSED_DAYS || days > LEASE_HORIZON_DAYS) {
+    return [];
+  }
+
+  if (days < 0 && property.status.toLowerCase().includes("vacant")) {
     return [];
   }
 
@@ -89,7 +101,7 @@ function leaseExpiryObligation(
     {
       id: `lease-${property.id}`,
       kind: "lease-expiry",
-      title: `${property.address} lease expires`,
+      title: `${property.address} lease ${days < 0 ? "ended" : "expires"}`,
       detail: `${tenant} - ${property.leaseEnd} (${formatDays(days)})`,
       href: `/houses/${property.id}`,
       dueDate: property.leaseEnd,
@@ -172,6 +184,9 @@ function birthdayObligations(
 }
 
 function urgencyFor(days: number): { urgency: RadarUrgency; priority: number } {
+  if (days < 0) {
+    return { urgency: "overdue", priority: -LEASE_LAPSED_DAYS + days };
+  }
   if (days <= 7) {
     return { urgency: "this-week", priority: days };
   }
@@ -250,6 +265,10 @@ function diffInDays(from: Date, to: Date): number {
 function formatDays(days: number): string {
   if (days === 0) {
     return "today";
+  }
+
+  if (days < 0) {
+    return `${-days} ${days === -1 ? "day" : "days"} ago`;
   }
 
   return `in ${days} ${days === 1 ? "day" : "days"}`;

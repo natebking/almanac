@@ -161,4 +161,38 @@ describe("buildDashboardAttentionItems", () => {
 
     expect(items).toEqual([]);
   });
+
+  it("flags a lease end date that already passed on an occupied property", () => {
+    const items = buildDashboardAttentionItems({
+      today: new Date("2026-10-23T00:00:00.000Z"),
+      properties: [
+        {
+          id: "lapsed",
+          address: "Park Place",
+          leaseStart: "2025-08-01",
+          leaseEnd: "2026-08-01",
+          status: "Active",
+          tenantNotes: "",
+        },
+        {
+          id: "vacant",
+          address: "Baltic Avenue",
+          leaseStart: "",
+          leaseEnd: "2026-09-01",
+          status: "Vacant",
+          tenantNotes: "",
+        },
+      ],
+      projects: [],
+      generatedDocuments: [],
+    });
+
+    expect(items[0]).toMatchObject({
+      id: "lease-lapsed",
+      title: "Park Place lease ended",
+      tone: "danger",
+    });
+    expect(items[0].subtitle).toContain("83 days ago");
+    expect(items.map((item) => item.id)).not.toContain("lease-vacant");
+  });
 });

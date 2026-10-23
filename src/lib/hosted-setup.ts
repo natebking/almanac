@@ -1,5 +1,3 @@
-import { alphaTesterEmail } from "@/lib/alpha-config";
-
 export type HostedSetupIssue =
   | "missing-clerk"
   | "missing-allowed-users"
@@ -57,7 +55,7 @@ export function shouldRedirectHostedPathToSignIn(pathname: string): boolean {
 }
 
 export function hasAllowedUserEmails(value: string | undefined): boolean {
-  return normalizedEmails(value).includes(alphaTesterEmail);
+  return normalizedEmails(value).length > 0;
 }
 
 function normalizedEmails(value: string | undefined): string[] {
