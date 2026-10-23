@@ -725,7 +725,7 @@ describe("answerPortfolioQuestion", () => {
     expect(answer.answer).toBe(
       [
         "Draft tenant text for Loch Lomand:",
-        "Hi Avery Johnson, this is operator with Example Property Group about Loch Lomand. I wanted to reach out about the property. Please reply when you have a chance.",
+        "Hi Avery Johnson, this is Example Property Group reaching out about Loch Lomand. Please reply when you have a chance.",
         "Review before sending.",
       ].join("\n\n"),
     );
@@ -777,6 +777,25 @@ describe("answerPortfolioQuestion", () => {
         href: "/houses/property_loch",
       },
     ]);
+  });
+
+  it("does not name an owner the sheet does not list in drafts", () => {
+    const withoutOwner = {
+      ...fixture,
+      properties: fixture.properties.map((property) =>
+        property.id === "property_loch" ? { ...property, owner: "" } : property,
+      ),
+    };
+    const draft = (question: string) =>
+      answerPortfolioQuestion(question, withoutOwner).answer.split("\n\n")[1];
+
+    expect(draft("Draft a tenant text for Loch Lomand.")).toBe(
+      "Hi Avery Johnson, this is your landlord reaching out about Loch Lomand. Please reply when you have a chance.",
+    );
+    expect(draft("Create an owner update for Loch Lomand.")).toMatch(/^Owner update: /);
+    expect(draft("Draft a 48-hour notice for Loch Lomand.")).toMatch(
+      /^Avery Johnson, this is a draft notice that the landlord intends to enter Loch Lomand/,
+    );
   });
 
   it("drafts rent increase notices without inventing a new rent amount", () => {

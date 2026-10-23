@@ -10,7 +10,10 @@ import {
   getRecentAssistantConversations,
   parseAssistantCitations,
 } from "@/lib/assistant/conversations";
-import { assistantExamples } from "@/lib/assistant/examples";
+import {
+  assistantPlaceholderQuestion,
+  buildAssistantExamples,
+} from "@/lib/assistant/examples";
 import { answerPortfolioQuestion } from "@/lib/assistant/portfolio-assistant";
 import {
   buildAssistantSourceCards,
@@ -72,7 +75,7 @@ export default async function AssistantPage({
             placeholder={
               selectedConversation
                 ? "What else should I check?"
-                : "Who lives at Loch Lomand?"
+                : assistantPlaceholderQuestion(input)
             }
             required
           />
@@ -118,7 +121,7 @@ export default async function AssistantPage({
         <section className="content-section">
           <SectionHeader title="Examples" />
           <div className="linked-list">
-            {assistantExamples.map((example) => (
+            {buildAssistantExamples(input).map((example) => (
               <Link href={`/assistant?q=${encodeURIComponent(example)}`} key={example}>
                 {example}
               </Link>

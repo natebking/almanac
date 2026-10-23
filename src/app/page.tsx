@@ -44,7 +44,7 @@ export default async function TodayPage() {
       <section className="dashboard-hero">
         <div className="dashboard-masthead">
           <div>
-            <p>Good morning,</p>
+            <p>Welcome back,</p>
             <h1>{greetingName}</h1>
           </div>
           <div className="dashboard-masthead-actions">

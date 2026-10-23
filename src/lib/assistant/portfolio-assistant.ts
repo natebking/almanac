@@ -997,7 +997,9 @@ function answerDraftIntent(
   }
 
   const tenant = property.currentTenants || "the tenant";
-  const owner = property.owner || "Example Property Group";
+  // The owner column is optional, so drafts never name a party the sheet does
+  // not list.
+  const owner = property.owner?.trim();
   const reviewReminder = "Review before sending.";
   const citations = [citationForProperty(property)];
 
@@ -1010,7 +1012,7 @@ function answerDraftIntent(
     return {
       answer: [
         `Draft tenant text for ${property.address}:`,
-        `Hi ${tenant}, this is operator with ${owner} about ${property.address}. I wanted to reach out about the property. Please reply when you have a chance.`,
+        `Hi ${tenant}, this is ${owner || "your landlord"} reaching out about ${property.address}. Please reply when you have a chance.`,
         reviewReminder,
       ].join("\n\n"),
       citations,
@@ -1030,7 +1032,7 @@ function answerDraftIntent(
     return {
       answer: [
         `Draft owner update for ${property.address}:`,
-        `${owner} update: ${property.address} is currently ${status}. Tenant(s): ${tenants}. Rent: ${rent}. Lease: ${leaseStart} to ${leaseEnd}.`,
+        `${owner ? `${owner} update` : "Owner update"}: ${property.address} is currently ${status}. Tenant(s): ${tenants}. Rent: ${rent}. Lease: ${leaseStart} to ${leaseEnd}.`,
         reviewReminder,
       ].join("\n\n"),
       citations,
@@ -1060,7 +1062,7 @@ function answerDraftIntent(
     return {
       answer: [
         `Draft ${noticeWindow} notice for ${property.address}:`,
-        `${tenant}, this is a draft notice that Example Property Group intends to enter ${property.address} after at least 48 hours' notice. Confirm the date, time, reason for entry, and local legal wording before sending.`,
+        `${tenant}, this is a draft notice that ${owner || "the landlord"} intends to enter ${property.address} after at least 48 hours' notice. Confirm the date, time, reason for entry, and local legal wording before sending.`,
         reviewReminder,
       ].join("\n\n"),
       citations,

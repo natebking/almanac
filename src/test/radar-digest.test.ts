@@ -45,7 +45,7 @@ describe("buildWeeklyDigest", () => {
   it("builds a subject and plain-text body", () => {
     expect(digest.subject).toBe("Almanac: 3 things this week");
     expect(digest.generatedFor).toBe("2026-06-15");
-    expect(digest.text).toContain("Leases expiring:");
+    expect(digest.text).toContain("Leases to renew:");
     expect(digest.text).toContain("Week of 2026-06-15");
   });
 

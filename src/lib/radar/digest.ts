@@ -23,7 +23,7 @@ export type WeeklyDigest = {
 };
 
 const SECTION_ORDER: { kind: RadarObligationKind; heading: string }[] = [
-  { kind: "lease-expiry", heading: "Leases expiring" },
+  { kind: "lease-expiry", heading: "Leases to renew" },
   { kind: "move-in", heading: "Move-ins" },
   { kind: "birthday", heading: "Tenant birthdays" },
   { kind: "vacancy", heading: "Vacancies to fill" },

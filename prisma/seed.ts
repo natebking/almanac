@@ -66,10 +66,40 @@ export async function seedDatabase(prisma: PrismaClientType) {
 
 // Build the sample Monopoly portfolio for one user. No wipe and no user
 // creation, so it is safe to call per visitor to populate a fresh demo sandbox.
+//
+// Every date is relative to `today` so the public demo never goes stale: one
+// lease is about to expire, one has lapsed, one tenant moves in soon, and a
+// birthday is coming up, whatever day the sandbox is created.
 export async function seedSamplePortfolio(
   prisma: PrismaClientType,
   userId: string,
+  today: Date = new Date(),
 ) {
+  const base = Date.UTC(
+    today.getUTCFullYear(),
+    today.getUTCMonth(),
+    today.getUTCDate(),
+  );
+  const at = (days: number, hour = 12) =>
+    new Date(base + days * 86_400_000 + hour * 3_600_000);
+  const isoDay = (days: number) => at(days).toISOString().slice(0, 10);
+  // Later this month (or today on the last day), so "birthdays this month" and
+  // the radar both have something to show.
+  const upcomingBirthdayThisMonth = () => {
+    const now = at(0);
+    const lastDay = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0),
+    ).getUTCDate();
+    const month = now.toLocaleDateString("en-US", { month: "long", timeZone: "UTC" });
+    return `${month} ${Math.min(now.getUTCDate() + 2, lastDay)}`;
+  };
+  const longDay = (days: number) =>
+    at(days).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
   const spreadsheetSource = await prisma.sourceConnection.create({
     data: {
       userId,
@@ -78,7 +108,7 @@ export async function seedSamplePortfolio(
       googleFileId: "sample-master-spreadsheet",
       googleFileUrl: "https://docs.google.com/spreadsheets/d/sample-master-spreadsheet",
       status: "synced",
-      lastSyncedAt: new Date("2026-06-17T12:00:00.000Z"),
+      lastSyncedAt: at(-1, 12),
       metadataJson: JSON.stringify({
         sourceOfTruth: true,
         sheetName: "Rentals",
@@ -94,7 +124,7 @@ export async function seedSamplePortfolio(
       googleFileId: "sample-drive-root",
       googleFileUrl: "https://drive.google.com/drive/folders/sample-drive-root",
       status: "indexed",
-      lastSyncedAt: new Date("2026-06-17T12:10:00.000Z"),
+      lastSyncedAt: at(-1, 12.2),
       metadataJson: JSON.stringify({
         storageOwner: "Google Drive",
       }),
@@ -130,8 +160,8 @@ export async function seedSamplePortfolio(
         "Boardwalk",
         "Avery Johnson",
         "$2,450",
-        "2026-01-01",
-        "2026-12-31",
+        isoDay(-296),
+        isoDay(69),
         "555-0144",
         "avery@example.com",
         "Avery Johnson: June 20",
@@ -142,7 +172,7 @@ export async function seedSamplePortfolio(
         "Active",
         "Fridge LG LFXS26973. Dishwasher Bosch 300.",
         "16x20x1",
-        "Choice Home Warranty through 2027-01-15.",
+        `Choice Home Warranty through ${isoDay(84)}.`,
         "No HOA on file.",
         "Electric: City Power. Water: City Water. Trash: Friday.",
         "Gate: 2468. Garage: 1357.",
@@ -151,11 +181,11 @@ export async function seedSamplePortfolio(
         "Park Place",
         "Mia Chen",
         "$2,850",
-        "2025-08-01",
-        "2026-08-01",
+        isoDay(-340),
+        isoDay(25),
         "555-0199",
         "mia@example.com",
-        "Mia Chen: February 12",
+        `Mia Chen: ${upcomingBirthdayThisMonth()}`,
         "No pets",
         "Example Property Group",
         "70 / 30",
@@ -172,15 +202,15 @@ export async function seedSamplePortfolio(
         "Marvin Gardens",
         "Noah Patel",
         "$2,200",
-        "2025-09-15",
-        "2026-09-15",
+        isoDay(-377),
+        isoDay(-12),
         "555-0112",
         "noah@example.com",
         "Noah Patel: September 4",
         "Cat",
         "Example Property Group",
         "65 / 35",
-        "Ask about inspection timing.",
+        "Month-to-month holdover. Renewal paperwork not signed yet.",
         "Active",
         "",
         "",
@@ -214,8 +244,8 @@ export async function seedSamplePortfolio(
         "Pennsylvania Avenue",
         "Olivia Martin",
         "$3,150",
-        "2026-02-01",
-        "2027-01-31",
+        isoDay(-265),
+        isoDay(100),
         "555-0181",
         "olivia@example.com",
         "Olivia Martin: January 22",
@@ -226,7 +256,7 @@ export async function seedSamplePortfolio(
         "Active",
         "Two HVAC zones. Kitchen fridge replaced in 2025.",
         "20x25x4",
-        "Warranty covers HVAC through 2026-11-30.",
+        `Warranty covers HVAC through ${isoDay(38)}.`,
         "HOA requires 48-hour notice for exterior vendors.",
         "Electric: City Power. Water: Pennsylvania Avenue Utility District.",
         "Side gate: 7788.",
@@ -235,19 +265,19 @@ export async function seedSamplePortfolio(
         "Reading Railroad",
         "Elliot Reed",
         "$2,675",
-        "2026-06-25",
-        "2027-06-24",
+        isoDay(12),
+        isoDay(376),
         "555-0161",
         "elliot@example.com",
         "Elliot Reed: June 27",
         "No pets",
         "Example Property Group",
         "70 / 30",
-        "Uses garage code frequently.",
+        "New tenant. Keys and garage code handoff on move-in day.",
         "Active",
         "Garage opener battery replaced May 2026.",
         "14x20x1",
-        "Home warranty renewal review due 2027-02-01.",
+        `Home warranty renewal review due ${isoDay(101)}.`,
         "No HOA on file.",
         "Electric: City Power. Internet: Tenant-managed.",
         "Garage code: 1616. Gate call box under Example Property Group.",
@@ -320,7 +350,7 @@ export async function seedSamplePortfolio(
         mimeType: "application/pdf",
         category: "lease",
         webViewLink: "https://drive.google.com/file/d/lease-loch-lomand",
-        modifiedTime: new Date("2026-06-01T12:00:00.000Z"),
+        modifiedTime: at(-22),
         textExtract: "Lease for Boardwalk. Tenant Avery Johnson.",
       },
       {
@@ -332,7 +362,7 @@ export async function seedSamplePortfolio(
         mimeType: "application/pdf",
         category: "application",
         webViewLink: "https://drive.google.com/file/d/application-verona",
-        modifiedTime: new Date("2026-05-20T12:00:00.000Z"),
+        modifiedTime: at(-34),
         textExtract: "Rental application for Park Place. Tenant Mia Chen.",
       },
       {
@@ -344,7 +374,7 @@ export async function seedSamplePortfolio(
         mimeType: "application/vnd.google-apps.folder",
         category: "photos",
         webViewLink: "https://drive.google.com/drive/folders/photos-wood-court",
-        modifiedTime: new Date("2026-06-05T12:00:00.000Z"),
+        modifiedTime: at(-18),
         textExtract: "Photos for vacant Baltic Avenue listing.",
       },
       {
@@ -356,7 +386,7 @@ export async function seedSamplePortfolio(
         mimeType: "application/pdf",
         category: "maintenance",
         webViewLink: "https://drive.google.com/file/d/maintenance-estates",
-        modifiedTime: new Date("2026-06-07T12:00:00.000Z"),
+        modifiedTime: at(-16),
         textExtract: "HVAC maintenance completed at Pennsylvania Avenue.",
       },
       {
@@ -368,7 +398,7 @@ export async function seedSamplePortfolio(
         mimeType: "application/pdf",
         category: "lease",
         webViewLink: "https://drive.google.com/file/d/lease-161-maiden-lane",
-        modifiedTime: new Date("2026-04-10T12:00:00.000Z"),
+        modifiedTime: at(-74),
         textExtract: "Lease for Reading Railroad. Tenant Elliot Reed.",
       },
       {
@@ -380,7 +410,7 @@ export async function seedSamplePortfolio(
         mimeType: "application/pdf",
         category: "financial",
         webViewLink: "https://drive.google.com/file/d/financial-st-paul",
-        modifiedTime: new Date("2026-06-10T12:00:00.000Z"),
+        modifiedTime: at(-13),
         textExtract: "Owner statement and deposited check for Marvin Gardens.",
       },
       {
@@ -392,7 +422,7 @@ export async function seedSamplePortfolio(
         mimeType: "application/vnd.google-apps.document",
         category: "project",
         webViewLink: "https://docs.google.com/document/d/project-wood-court",
-        modifiedTime: new Date("2026-06-12T12:00:00.000Z"),
+        modifiedTime: at(-11),
         textExtract: "Active remodel scope for Baltic Avenue.",
       },
       {
@@ -404,7 +434,7 @@ export async function seedSamplePortfolio(
         mimeType: "application/vnd.google-apps.document",
         category: "template",
         webViewLink: "https://docs.google.com/document/d/template-move-in-checklist",
-        modifiedTime: new Date("2026-06-03T12:00:00.000Z"),
+        modifiedTime: at(-20),
         textExtract: "Reusable Move-In Checklist template.",
       },
       {
@@ -416,7 +446,7 @@ export async function seedSamplePortfolio(
         mimeType: "application/vnd.google-apps.document",
         category: "material",
         webViewLink: "https://docs.google.com/document/d/materials-tenant-overview",
-        modifiedTime: new Date("2026-05-01T12:00:00.000Z"),
+        modifiedTime: at(-53),
         textExtract: "Reference material for tenant overview.",
       },
     ],
@@ -513,26 +543,32 @@ export async function seedSamplePortfolio(
     },
   });
 
-  await prisma.generatedDocument.create({
+  // The checklist for the upcoming Reading Railroad move-in, already generated
+  // and ready to print. Its print link must point at its own id, the same way
+  // generateDocumentForUser sets it.
+  const sampleDocument = await prisma.generatedDocument.create({
     data: {
       userId,
-      propertyIndexId: propertyId("Boardwalk"),
+      propertyIndexId: propertyId("Reading Railroad"),
       templateId: template.id,
-      title: "Move-In Checklist - Boardwalk",
+      title: "Move-In Checklist - Reading Railroad",
       status: "generated",
       renderedBody: localBody
-        .replace("{{tenant_name}}", "Avery Johnson")
-        .replace("{{property_address}}", "Boardwalk")
-        .replace("{{move_in_date}}", "July 1, 2026")
-        .replace("{{filter_size}}", "16x20x1"),
+        .replace("{{tenant_name}}", "Elliot Reed")
+        .replace("{{property_address}}", "Reading Railroad")
+        .replace("{{move_in_date}}", longDay(12))
+        .replace("{{filter_size}}", "14x20x1"),
       fieldValuesJson: JSON.stringify({
-        tenant_name: "Avery Johnson",
-        property_address: "Boardwalk",
-        move_in_date: "July 1, 2026",
-        filter_size: "16x20x1",
+        tenant_name: "Elliot Reed",
+        property_address: "Reading Railroad",
+        move_in_date: longDay(12),
+        filter_size: "14x20x1",
       }),
-      pdfUrl: "/api/documents/pdf/sample",
     },
+  });
+  await prisma.generatedDocument.update({
+    where: { id: sampleDocument.id },
+    data: { pdfUrl: `/api/documents/pdf/${sampleDocument.id}` },
   });
 
   await prisma.propertyVisit.createMany({
@@ -540,12 +576,12 @@ export async function seedSamplePortfolio(
       {
         userId,
         propertyIndexId: propertyIndexId("Boardwalk"),
-        openedAt: new Date("2026-06-17T13:30:00.000Z"),
+        openedAt: at(-1, 13.5),
       },
       {
         userId,
         propertyIndexId: propertyIndexId("Baltic Avenue"),
-        openedAt: new Date("2026-06-17T12:45:00.000Z"),
+        openedAt: at(-1, 12.75),
       },
     ],
   });
@@ -558,7 +594,7 @@ export async function seedSamplePortfolio(
         title: "Review generated move-in checklist",
         status: "open",
         kind: "document",
-        dueDate: new Date("2026-07-01T16:00:00.000Z"),
+        dueDate: at(5, 16),
       },
       {
         userId,
@@ -566,7 +602,7 @@ export async function seedSamplePortfolio(
         title: "Check HVAC filter size before renewal packet",
         status: "open",
         kind: "maintenance",
-        dueDate: new Date("2026-07-03T16:00:00.000Z"),
+        dueDate: at(7, 16),
       },
     ],
   });

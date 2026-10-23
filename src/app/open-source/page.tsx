@@ -26,11 +26,14 @@ export const metadata: Metadata = {
     "Almanac is an open-source, self-hosted property operations front end for teams already running on Google Drive and Sheets. It flags what needs attention, answers from your real records with citations, and never moves your files out of Drive.",
 };
 
+// Mirrors the demo portfolio (prisma/seed.ts), whose dates are relative to the
+// day a visitor's sandbox is created, so leases are described relative to
+// today instead of with calendar dates that go stale.
 const landingProperties = [
   {
     address: "Boardwalk",
-    files: "Lease, photos, checklist",
-    lease: "Dec 31, 2026",
+    files: "Lease, photos",
+    lease: "Ends in 69 days",
     rent: "$2,450",
     status: "Occupied",
     tenant: "Avery Johnson",
@@ -38,18 +41,18 @@ const landingProperties = [
   {
     address: "Park Place",
     files: "Application, lease",
-    lease: "Mar 14, 2027",
+    lease: "Ends in 25 days",
     rent: "$2,850",
-    status: "Occupied",
+    status: "Renewal soon",
     tenant: "Mia Chen",
   },
   {
     address: "Marvin Gardens",
-    files: "Lease, inspection",
-    lease: "Aug 31, 2026",
-    rent: "$2,300",
-    status: "Renewal soon",
-    tenant: "Jordan Lee",
+    files: "Owner statement",
+    lease: "Ended 12 days ago",
+    rent: "$2,200",
+    status: "Lease ended",
+    tenant: "Noah Patel",
   },
   {
     address: "Baltic Avenue",
@@ -61,8 +64,8 @@ const landingProperties = [
   },
   {
     address: "Pennsylvania Avenue",
-    files: "Warranty, owner update",
-    lease: "Jan 31, 2027",
+    files: "HVAC invoice",
+    lease: "Ends in 100 days",
     rent: "$3,150",
     status: "Occupied",
     tenant: "Olivia Martin",
@@ -431,8 +434,8 @@ function ProductHeroPreview() {
             <div className="public-dashboard-attention">
               <span className="public-dot warning" />
               <div>
-                <strong>Marvin Gardens lease expires</strong>
-                <small>in 86 days</small>
+                <strong>Park Place lease expires</strong>
+                <small>in 25 days</small>
               </div>
               <span className="public-dashboard-pill">Lease</span>
             </div>

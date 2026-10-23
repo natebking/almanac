@@ -15,18 +15,18 @@ describe("buildAssistantAnswerDisplay", () => {
       buildAssistantAnswerDisplay(
         [
           "Draft tenant text for Loch Lomand:",
-          "Hi Avery Johnson, this is operator with Example Property Group about Loch Lomand.",
+          "Hi Avery Johnson, this is Example Property Group reaching out about Loch Lomand.",
           "Review before sending.",
         ].join("\n\n"),
       ),
     ).toEqual({
       title: "Draft tenant text for Loch Lomand:",
       paragraphs: [
-        "Hi Avery Johnson, this is operator with Example Property Group about Loch Lomand.",
+        "Hi Avery Johnson, this is Example Property Group reaching out about Loch Lomand.",
         "Review before sending.",
       ],
       copyText:
-        "Hi Avery Johnson, this is operator with Example Property Group about Loch Lomand.",
+        "Hi Avery Johnson, this is Example Property Group reaching out about Loch Lomand.",
     });
   });
 
