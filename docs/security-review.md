@@ -19,7 +19,7 @@ Last reviewed: 2026-06-19
 
 ## Open Risks
 
-- `npm audit --omit=dev` passes after parent-scoped root `overrides` pin the vulnerable transitive leaves to `next -> postcss@8.5.10` and `@prisma/dev -> @hono/node-server@1.19.13`. Keep those overrides until Next.js and Prisma ship non-vulnerable direct dependency pins.
+- `npm audit --omit=dev` reports no advisories on Next.js 16.4.3 and Prisma 7.10.1 (October 2026). New advisories land often, so run it before every deploy; the earlier `overrides` pins were removed because they had come to pin vulnerable versions.
 - Google Drive readonly scope is broad enough to read files the connected account can access. For a wider public release, consider narrowing setup with a dedicated Drive root folder, a dedicated Google account, or a Google Picker flow.
 - Do not connect real tenant, owner, lease, financial, or vendor files until the dummy portfolio setup and sync workflow passes.
 
