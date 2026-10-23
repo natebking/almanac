@@ -73,7 +73,7 @@ describe("buildDocumentReviewFields", () => {
       {
         key: "move_in_date",
         label: "Move In Date",
-        defaultValue: "2026-01-01",
+        defaultValue: "January 1, 2026",
       },
     ]);
   });

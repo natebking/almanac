@@ -1,4 +1,5 @@
 import type { Property, PropertyIndex, PropertyProfile } from "@/generated/prisma/client";
+import { formatDocumentDate } from "@/lib/spreadsheet/dates";
 
 export type FieldValues = Record<string, string>;
 
@@ -46,6 +47,10 @@ const INDEXED_PROPERTY_VALUE_MAP: Record<string, keyof PropertyIndex> = {
   tenant_phone: "tenantPhone",
 };
 
+// Sync stores lease dates as ISO so they can be compared; documents show them
+// the way a person writes them.
+const INDEXED_DATE_PLACEHOLDERS = new Set(["lease_end", "lease_start", "move_in_date"]);
+
 const INDEXED_PROFILE_VALUE_MAP: Record<
   string,
   keyof IndexedPropertyProfileDefaults
@@ -86,10 +91,13 @@ export function propertyPlaceholderDefaults(
 ): FieldValues {
   if (isIndexedProperty(property)) {
     const rowDefaults = Object.fromEntries(
-      Object.entries(INDEXED_PROPERTY_VALUE_MAP).map(([key, propertyKey]) => [
-        key,
-        String(property[propertyKey] ?? ""),
-      ]),
+      Object.entries(INDEXED_PROPERTY_VALUE_MAP).map(([key, propertyKey]) => {
+        const value = String(property[propertyKey] ?? "");
+        return [
+          key,
+          INDEXED_DATE_PLACEHOLDERS.has(key) ? formatDocumentDate(value) : value,
+        ];
+      }),
     );
 
     return {

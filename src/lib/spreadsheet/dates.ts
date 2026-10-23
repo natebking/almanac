@@ -20,13 +20,16 @@ const MONTHS: Record<string, number> = {
   dec: 12,
 };
 
+// A cell formatted as "Date time" arrives as "12/31/2026 0:00:00".
+const TRAILING_TIME = /[ T]\d{1,2}:\d{2}(?::\d{2}(?:\.\d+)?)?\s*(?:[AaPp]\.?[Mm]\.?)?$/;
+
 export function normalizeSpreadsheetDate(value: string): string {
   const text = value.trim();
   if (!text) {
     return text;
   }
 
-  const parts = parseDateParts(text);
+  const parts = parseDateParts(text.replace(TRAILING_TIME, ""));
   if (!parts || !isValidDate(parts.year, parts.month, parts.day)) {
     return text;
   }
@@ -97,4 +100,26 @@ function isValidDate(year: number, month: number, day: number): boolean {
 
   const date = new Date(Date.UTC(year, month - 1, day));
   return date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
+// Generated documents read better with "January 1, 2026" than an ISO date.
+// Anything that is not an ISO date (free text like "Month to month") is
+// returned unchanged.
+export function formatDocumentDate(value: string): string {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    return value;
+  }
+
+  const [year, month, day] = match.slice(1).map(Number);
+  if (!isValidDate(year, month, day)) {
+    return value;
+  }
+
+  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
