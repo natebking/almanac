@@ -12,7 +12,7 @@ describe("setup required page", () => {
     vi.resetModules();
   });
 
-  it("marks allowed users missing when the alpha tester's test Google account is absent", async () => {
+  it("marks allowed users configured for an operator-only allowlist", async () => {
     vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "pk_test_fake");
     vi.stubEnv("CLERK_SECRET_KEY", "sk_test_fake");
     vi.stubEnv("DATABASE_URL", "postgres://example");
@@ -27,7 +27,7 @@ describe("setup required page", () => {
       searchParams: Promise.resolve({ reason: "missing-google-oauth" }),
     });
 
-    expect(setupCheckText(page, "Allowed user emails")).toContain("Missing");
+    expect(setupCheckText(page, "Allowed user emails")).toContain("Configured");
   });
 
   it("renders the alpha handoff commands needed to clear setup blockers", async () => {

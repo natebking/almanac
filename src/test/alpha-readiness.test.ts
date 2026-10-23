@@ -123,11 +123,11 @@ describe("alpha readiness", () => {
     ).not.toContain("fixture-bundle");
   });
 
-  it("blocks hosted testing when the alpha tester's test Google account is not allowlisted", () => {
+  it("blocks hosted testing when the email allowlist is empty", () => {
     const report = assessAlphaReadiness({
       env: {
         ...completeEnv,
-        ALMANAC_ALLOWED_EMAILS: "operator@example.com, assistant@example.com",
+        ALMANAC_ALLOWED_EMAILS: " , ",
       },
       fixtures: completeFixtures,
     });
@@ -136,9 +136,20 @@ describe("alpha readiness", () => {
     expect(report.blockers.map((check) => check.id)).toContain(
       "allowed-users",
     );
-    expect(
-      report.blockers.find((check) => check.id === "allowed-users")?.detail,
-    ).toContain("alpha-tester@example.com");
+  });
+
+  it("accepts any operator allowlist without the original tester's email", () => {
+    const report = assessAlphaReadiness({
+      env: {
+        ...completeEnv,
+        ALMANAC_ALLOWED_EMAILS: "operator@example.com",
+      },
+      fixtures: completeFixtures,
+    });
+
+    expect(report.blockers.map((check) => check.id)).not.toContain(
+      "allowed-users",
+    );
   });
 
   it("treats the OpenAI key as a warning because deterministic answers still work", () => {

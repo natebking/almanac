@@ -46,11 +46,20 @@ describe("hosted setup gates", () => {
     ).toBe("missing-allowed-users");
   });
 
-  it("requires the alpha tester's test Google account in the hosted allowlist", () => {
+  it("accepts a self-hosted allowlist that only lists the operator's own emails", () => {
     expect(
       hostedSetupIssue({
         ...configuredEnv,
         ALMANAC_ALLOWED_EMAILS: "operator@example.com,assistant@example.com",
+      }),
+    ).toBeNull();
+  });
+
+  it("treats a whitespace-only allowlist as missing", () => {
+    expect(
+      hostedSetupIssue({
+        ...configuredEnv,
+        ALMANAC_ALLOWED_EMAILS: " , ",
       }),
     ).toBe("missing-allowed-users");
   });
