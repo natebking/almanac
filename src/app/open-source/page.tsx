@@ -24,6 +24,9 @@ export const metadata: Metadata = {
   title: "Almanac | Property operations on Google Drive",
   description:
     "Almanac is an open-source, self-hosted property operations front end for teams already running on Google Drive and Sheets. It flags what needs attention, answers from your real records with citations, and never moves your files out of Drive.",
+  // The same landing answers at almanac.homes/ and at /open-source on every
+  // host; point search engines at the one public URL.
+  alternates: { canonical: "https://almanac.homes/" },
 };
 
 // Mirrors the demo portfolio (prisma/seed.ts), whose dates are relative to the
