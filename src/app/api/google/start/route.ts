@@ -6,18 +6,22 @@ import {
   GOOGLE_OAUTH_STATE_COOKIE,
 } from "@/lib/google/oauth";
 
-export async function GET() {
+export async function GET(request: Request) {
   const env = getEnv();
+
+  // The local and missing-config bounces stay on the host the visitor came
+  // from. APP_URL only matters once real OAuth is configured, so a deployment
+  // that never set it (the public demo) must not redirect to localhost.
 
   if (env.GOOGLE_MODE !== "real") {
     return NextResponse.redirect(
-      new URL("/settings/google?google=local", env.APP_URL),
+      new URL("/settings/google?google=local", request.url),
     );
   }
 
   if (!hasGoogleOAuthConfig(env)) {
     return NextResponse.redirect(
-      new URL("/settings/google?google=missing-config", env.APP_URL),
+      new URL("/settings/google?google=missing-config", request.url),
     );
   }
 
